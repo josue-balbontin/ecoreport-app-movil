@@ -22,12 +22,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.ecoreport.data.ReporteEntity
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+
 @Composable
 fun PantallaReportes(
     reportes: List<ReporteEntity>,
     seleccionarReporte: (ReporteEntity) -> Unit,
+    filtrarPorCategoria: (String) -> Unit,
+    filtrarPorEstado: (String) -> Unit,
+    cargarTodos: () -> Unit,
     volver: () -> Unit
 ) {
+
+    var expandedCategoria by remember { mutableStateOf(false) }
+    var expandedEstado by remember { mutableStateOf(false) }
+    var filtroActivo by remember { mutableStateOf("Todos") }
 
     Column(
         modifier = Modifier
@@ -45,10 +61,116 @@ fun PantallaReportes(
             modifier = Modifier.height(16.dp)
         )
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Filtro por Estado
+            Column {
+                OutlinedButton(onClick = { expandedEstado = true }) {
+                    Text("Filtrar Estado")
+                }
+                DropdownMenu(
+                    expanded = expandedEstado,
+                    onDismissRequest = { expandedEstado = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Pendiente") },
+                        onClick = {
+                            filtrarPorEstado("PENDIENTE")
+                            filtroActivo = "Estado: Pendiente"
+                            expandedEstado = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("En proceso") },
+                        onClick = {
+                            filtrarPorEstado("EN_PROCESO")
+                            filtroActivo = "Estado: En proceso"
+                            expandedEstado = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Resuelto") },
+                        onClick = {
+                            filtrarPorEstado("RESUELTO")
+                            filtroActivo = "Estado: Resuelto"
+                            expandedEstado = false
+                        }
+                    )
+                }
+            }
+
+            // Filtro por Categoría
+            Column {
+                OutlinedButton(onClick = { expandedCategoria = true }) {
+                    Text("Filtrar Categoría")
+                }
+                DropdownMenu(
+                    expanded = expandedCategoria,
+                    onDismissRequest = { expandedCategoria = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Contaminación") },
+                        onClick = {
+                            filtrarPorCategoria("Contaminación")
+                            filtroActivo = "Categoría: Contaminación"
+                            expandedCategoria = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Basura") },
+                        onClick = {
+                            filtrarPorCategoria("Basura")
+                            filtroActivo = "Categoría: Basura"
+                            expandedCategoria = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Deforestación") },
+                        onClick = {
+                            filtrarPorCategoria("Deforestación")
+                            filtroActivo = "Categoría: Deforestación"
+                            expandedCategoria = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        OutlinedButton(
+            onClick = {
+                filtroActivo = "Todos"
+                cargarTodos()
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Limpiar Filtros")
+        }
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Text(
+            text = "Filtro actual: $filtroActivo",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
+
         if (reportes.isEmpty()) {
 
             Text(
-                text = "No existen reportes registrados."
+                text = if (filtroActivo == "Todos") "No existen reportes registrados." else "No existen reportes para el filtro seleccionado."
             )
 
         } else {

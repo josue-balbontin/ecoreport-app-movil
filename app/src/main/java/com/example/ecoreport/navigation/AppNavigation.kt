@@ -18,7 +18,9 @@ fun AppNavigation(
     val navController =
         rememberNavController()
 
-    val viewModel: ReporteViewModel = viewModel()
+    val viewModel: ReporteViewModel = viewModel(
+        factory = ReporteViewModel.Factory(repository)
+    )
     val reportes =
         remember {
             mutableStateListOf<
@@ -128,6 +130,18 @@ fun AppNavigation(
                         "detalle"
                     )
                 },
+                
+                filtrarPorCategoria = { categoria ->
+                    viewModel.filtrarPorCategoria(categoria)
+                },
+                
+                filtrarPorEstado = { estado ->
+                    viewModel.filtrarPorEstado(estado)
+                },
+                
+                cargarTodos = {
+                    viewModel.cargarReportes()
+                },
 
                 volver = {
 
@@ -170,7 +184,7 @@ fun AppNavigation(
 
             PantallaEstadisticas(
                 reportes =
-                    reportes,
+                    viewModel.reportes,
 
                 volver = {
 

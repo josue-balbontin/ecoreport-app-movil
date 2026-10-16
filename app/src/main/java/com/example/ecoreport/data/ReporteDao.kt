@@ -20,6 +20,23 @@ interface ReporteDao {
     suspend fun obtenerTodos():
             List<ReporteEntity>
 
+    /*
+    SE NECESITA AGREGAR UN NUEVO QUERY QUE NOS PERMITA REALIZAR CONSULTAS
+    MEDIANTE FILTROS UTILIZANDO EL WHERE
+    */
+    @Query(
+        "SELECT * FROM reportes WHERE categoria = :categoria COLLATE NOCASE ORDER BY id DESC"
+    )
+    suspend fun obtenerPorCategoria(categoria: String): List<ReporteEntity>
+
+    @Query(
+        "SELECT * FROM reportes WHERE estado = :estado COLLATE NOCASE ORDER BY id DESC"
+    )
+    suspend fun obtenerPorEstado(estado: String): List<ReporteEntity>
+
+
+
+
     @Update
     suspend fun actualizar(
         reporte: ReporteEntity
