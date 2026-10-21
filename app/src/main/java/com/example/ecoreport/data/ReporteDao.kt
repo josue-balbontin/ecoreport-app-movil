@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ReporteDao {
@@ -17,25 +18,45 @@ interface ReporteDao {
     @Query(
         "SELECT * FROM reportes ORDER BY id DESC"
     )
-    suspend fun obtenerTodos():
-            List<ReporteEntity>
-
-    /*
-    SE NECESITA AGREGAR UN NUEVO QUERY QUE NOS PERMITA REALIZAR CONSULTAS
-    MEDIANTE FILTROS UTILIZANDO EL WHERE
-    */
-    @Query(
-        "SELECT * FROM reportes WHERE categoria = :categoria COLLATE NOCASE ORDER BY id DESC"
-    )
-    suspend fun obtenerPorCategoria(categoria: String): List<ReporteEntity>
+    fun obtenerTodos(): Flow<List<ReporteEntity>>
 
     @Query(
-        "SELECT * FROM reportes WHERE estado = :estado COLLATE NOCASE ORDER BY id DESC"
+        """
+            SELECT * 
+            FROM reportes 
+            WHERE (:categoria IS NULL OR :categoria = '' OR categoria LIKE '%' || :categoria || '%')
+            ORDER BY id DESC
+        """
     )
-    suspend fun obtenerPorEstado(estado: String): List<ReporteEntity>
+    fun obtenerPorCategoria(
+        categoria: String?
+    ): Flow<List<ReporteEntity>>
 
+    @Query(
+        """
+            SELECT * 
+            FROM reportes 
+            WHERE (:estado IS NULL OR :estado = '' OR :estado = 'TODOS' OR UPPER(estado) = UPPER(:estado))
+            ORDER BY id DESC
+        """
+    )
+    fun obtenerPorEstado(
+        estado: String?
+    ): Flow<List<ReporteEntity>>
 
-
+    @Query(
+        """
+            SELECT * 
+            FROM reportes 
+            WHERE (:categoria IS NULL OR :categoria = '' OR categoria LIKE '%' || :categoria || '%')
+              AND (:estado IS NULL OR :estado = '' OR :estado = 'TODOS' OR UPPER(estado) = UPPER(:estado))
+            ORDER BY id DESC
+        """
+    )
+    fun obtenerFiltrados(
+        categoria: String?,
+        estado: String?
+    ): Flow<List<ReporteEntity>>
 
     @Update
     suspend fun actualizar(

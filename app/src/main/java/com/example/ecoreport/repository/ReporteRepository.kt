@@ -2,20 +2,25 @@ package com.example.ecoreport.repository
 
 import com.example.ecoreport.data.ReporteDao
 import com.example.ecoreport.data.ReporteEntity
+import kotlinx.coroutines.flow.Flow
 
 class ReporteRepository (
     private val reporteDao: ReporteDao
 ) {
-    suspend fun obtenerTodos(): List<ReporteEntity> {
+    fun obtenerTodos(): Flow<List<ReporteEntity>> {
         return reporteDao.obtenerTodos()
     }
 
-    suspend fun obtenerPorCategoria(categoria: String): List<ReporteEntity> {
+    fun obtenerPorCategoria(categoria: String?): Flow<List<ReporteEntity>> {
         return reporteDao.obtenerPorCategoria(categoria)
     }
 
-    suspend fun obtenerPorEstado(estado: String): List<ReporteEntity> {
+    fun obtenerPorEstado(estado: String?): Flow<List<ReporteEntity>> {
         return reporteDao.obtenerPorEstado(estado)
+    }
+
+    fun obtenerFiltrados(categoria: String?, estado: String?): Flow<List<ReporteEntity>> {
+        return reporteDao.obtenerFiltrados(categoria, estado)
     }
 
     suspend fun insertar(reporte: ReporteEntity){

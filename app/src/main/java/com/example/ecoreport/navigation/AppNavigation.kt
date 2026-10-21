@@ -1,195 +1,125 @@
 package com.example.ecoreport.navigation
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.ecoreport.data.ReporteEntity
 import com.example.ecoreport.repository.ReporteRepository
-import com.example.ecoreport.ui.screens.*
+import com.example.ecoreport.ui_comp.screens.PantallaDetalle
+import com.example.ecoreport.ui_comp.screens.PantallaEstadisticas
 import com.example.ecoreport.ui_comp.screens.PantallaInicio
+import com.example.ecoreport.ui_comp.screens.PantallaRegistro
+import com.example.ecoreport.ui_comp.screens.PantallaReportes
 import com.example.ecoreport.viewmodel.ReporteViewModel
-import kotlinx.coroutines.launch
+import com.example.ecoreport.viewmodel.ReporteViewModelFactory
 
 @Composable
 fun AppNavigation(
     repository: ReporteRepository
 ) {
+    val navController = rememberNavController()
 
-    val navController =
-        rememberNavController()
+    val factory = remember(repository) {
+        ReporteViewModelFactory(repository)
+    }
 
     val viewModel: ReporteViewModel = viewModel(
-        factory = ReporteViewModel.Factory(repository)
+        factory = factory
     )
-    val reportes =
-        remember {
-            mutableStateListOf<
-                    ReporteEntity
-                    >()
-        }
+
+    val reportes by viewModel.reportes.collectAsState()
+    val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsState()
+    val estadoSeleccionado by viewModel.estadoSeleccionado.collectAsState()
 
     var reporteSeleccionado by remember {
-        mutableStateOf<
-                ReporteEntity?
-                >(null)
-    }
-
-    val scope =
-        rememberCoroutineScope()
-
-    suspend fun cargarReportes() {
-
-        val datos =
-            repository.obtenerTodos()
-
-        reportes.clear()
-
-        reportes.addAll(
-            datos
-        )
-    }
-
-    LaunchedEffect(Unit) {
-
-        cargarReportes()
-
+        mutableStateOf<ReporteEntity?>(null)
     }
 
     NavHost(
-        navController =
-            navController,
-
-        startDestination =
-            "inicio"
+        navController = navController,
+        startDestination = "inicio"
     ) {
-
-        composable(
-            "inicio"
-        ) {
-
-            PantallaInicio (
-                reportes =
-                    viewModel.reportes,
-
+        composable("inicio") {
+            PantallaInicio(
+                reportes = reportes,
                 irRegistro = {
-                    navController
-                        .navigate(
-                            "registro"
-                        )
+                    navController.navigate("registro")
                 },
-
                 irReportes = {
-                    navController
-                        .navigate(
-                            "reportes"
-                        )
+                    navController.navigate("reportes")
                 },
-
                 irEstadisticas = {
-                    navController
-                        .navigate(
-                            "estadisticas"
-                        )
+                    navController.navigate("estadisticas")
                 }
             )
         }
-        composable(
-            "registro"
-        ) {
 
+        composable("registro") {
             PantallaRegistro(
                 registrarReporte = { reporte ->
-
                     viewModel.insertar(reporte)
-
-                    navController
-                        .popBackStack()
+                    navController.popBackStack()
                 },
-
                 volver = {
-
-                    navController
-                        .popBackStack()
+                    navController.popBackStack()
                 }
             )
         }
-        composable(
-            "reportes"
-        ) {
 
+        composable("reportes") {
             PantallaReportes(
-                reportes =
-                    viewModel.reportes,
-
+                reportes = reportes,
+                categoriaSeleccionada = categoriaSeleccionada,
+                estadoSeleccionado = estadoSeleccionado,
+                seleccionarCategoria = { categoria ->
+                    viewModel.seleccionarCategoria(categoria)
+                },
+                onAplicarFiltros = { categoria, estado ->
+                    viewModel.aplicarFiltros(categoria, estado)
+                },
+                onLimpiarFiltros = {
+                    viewModel.limpiarFiltros()
+                },
                 seleccionarReporte = { reporte ->
-
-                    reporteSeleccionado =
-                        reporte
-
-                    navController.navigate(
-                        "detalle"
-                    )
+                    reporteSeleccionado = reporte
+                    navController.navigate("detalle")
                 },
-                
-                filtrarPorCategoria = { categoria ->
-                    viewModel.filtrarPorCategoria(categoria)
-                },
-                
-                filtrarPorEstado = { estado ->
-                    viewModel.filtrarPorEstado(estado)
-                },
-                
-                cargarTodos = {
-                    viewModel.cargarReportes()
-                },
-
                 volver = {
-
-                    navController
-                        .popBackStack()
+                    navController.popBackStack()
                 }
             )
         }
-        composable(
-            "detalle"
-        ) {
 
+        composable("detalle") {
             PantallaDetalle(
-                reporte =
-                    reporteSeleccionado,
-
-                actualizarReporte = {
-                    reporteActualizado ->
+                reporte = reporteSeleccionado,
+                actualizarReporte = { reporteActualizado ->
                     viewModel.actualizar(reporteActualizado)
                     reporteSeleccionado = reporteActualizado
                 },
-
                 eliminarReporte = { reporte ->
-
                     viewModel.eliminar(reporte)
-
-                    navController
-                        .popBackStack()
+                    reporteSeleccionado = null
+                    navController.popBackStack()
                 },
-
                 volver = {
-                    navController
-                        .popBackStack()
+                    navController.popBackStack()
                 }
             )
         }
-        composable(
-            "estadisticas"
-        ) {
 
+        composable("estadisticas") {
             PantallaEstadisticas(
-                reportes =
-                    viewModel.reportes,
-
+                reportes = reportes,
                 volver = {
-
-                    navController
-                        .popBackStack()
+                    navController.popBackStack()
                 }
             )
         }
