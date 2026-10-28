@@ -1,6 +1,7 @@
 package com.example.ecoreport.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +18,7 @@ import com.example.ecoreport.ui_comp.screens.PantallaEstadisticas
 import com.example.ecoreport.ui_comp.screens.PantallaInicio
 import com.example.ecoreport.ui_comp.screens.PantallaRegistro
 import com.example.ecoreport.ui_comp.screens.PantallaReportes
+import com.example.ecoreport.ui_comp.screens.PantallaReportesRemotos
 import com.example.ecoreport.viewmodel.ReporteViewModel
 import com.example.ecoreport.viewmodel.ReporteViewModelFactory
 
@@ -37,6 +39,9 @@ fun AppNavigation(
     val reportes by viewModel.reportes.collectAsState()
     val categoriaSeleccionada by viewModel.categoriaSeleccionada.collectAsState()
     val estadoSeleccionado by viewModel.estadoSeleccionado.collectAsState()
+    val reportesRemotos by viewModel.reportesRemotos.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     var reporteSeleccionado by remember {
         mutableStateOf<ReporteEntity?>(null)
@@ -57,6 +62,9 @@ fun AppNavigation(
                 },
                 irEstadisticas = {
                     navController.navigate("estadisticas")
+                },
+                irReportesRemotos = {
+                    navController.navigate("reportes_remotos")
                 }
             )
         }
@@ -90,6 +98,24 @@ fun AppNavigation(
                 seleccionarReporte = { reporte ->
                     reporteSeleccionado = reporte
                     navController.navigate("detalle")
+                },
+                volver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("reportes_remotos") {
+            LaunchedEffect(Unit) {
+                viewModel.cargarReportesRemotos()
+            }
+
+            PantallaReportesRemotos(
+                reportesRemotos = reportesRemotos,
+                cargando = cargando,
+                error = error,
+                reintentar = {
+                    viewModel.cargarReportesRemotos()
                 },
                 volver = {
                     navController.popBackStack()

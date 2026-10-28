@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.room.Room
 import com.example.ecoreport.data.AppDatabase
+import com.example.ecoreport.data.remote.RetrofitClient
 import com.example.ecoreport.navigation.AppNavigation
 import com.example.ecoreport.repository.ReporteRepository
 
@@ -30,7 +31,10 @@ class MainActivity :
             database.reporteDao()
 
         val repository =
-            ReporteRepository(reporteDao)
+            ReporteRepository(
+                reporteDao = reporteDao,
+                api = RetrofitClient.api
+            )
 
         setContent {
 

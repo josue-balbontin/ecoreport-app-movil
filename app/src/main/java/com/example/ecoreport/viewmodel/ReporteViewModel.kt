@@ -3,6 +3,7 @@ package com.example.ecoreport.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ecoreport.data.ReporteEntity
+import com.example.ecoreport.data.remote.ReporteDto
 import com.example.ecoreport.repository.ReporteRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,15 @@ class ReporteViewModel (
 
     private val _estadoSeleccionado = MutableStateFlow<String?>(null)
     val estadoSeleccionado: StateFlow<String?> = _estadoSeleccionado.asStateFlow()
+
+    private val _reportesRemotos = MutableStateFlow<List<ReporteDto>>(emptyList())
+    val reportesRemotos: StateFlow<List<ReporteDto>> = _reportesRemotos.asStateFlow()
+
+    private val _cargando = MutableStateFlow(false)
+    val cargando: StateFlow<Boolean> = _cargando.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     val reportes: StateFlow<List<ReporteEntity>> =
         combine(_categoriaSeleccionada, _estadoSeleccionado) { categoria, estado ->
@@ -66,6 +76,26 @@ class ReporteViewModel (
 
     fun cargarReportes() {
         limpiarFiltros()
+    }
+
+    fun cargarReportesRemotos() {
+        viewModelScope.launch {
+            _cargando.value = true
+            _error.value = null
+            try {
+                val remotos = repository.obtenerReportesRemotos()
+                _reportesRemotos.value = remotos
+                println("API_REMOTA: Reportes remotos obtenidos: ${remotos.size}")
+                remotos.forEach {
+                    println("API_REMOTA: ID=${it.id}, Titulo=${it.titulo}, Categoria=${it.categoria}, Estado=${it.estado}")
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+                println("API_REMOTA ERROR: ${e.message}")
+            } finally {
+                _cargando.value = false
+            }
+        }
     }
 
     fun insertar(reporte: ReporteEntity) {

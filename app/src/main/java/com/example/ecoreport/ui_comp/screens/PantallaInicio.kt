@@ -26,7 +26,10 @@ fun PantallaInicio(
         () -> Unit,
 
     irEstadisticas:
-        () -> Unit
+        () -> Unit,
+
+    irReportesRemotos:
+        () -> Unit = {}
 ) {
 
     val pendientes =
@@ -113,6 +116,20 @@ fun PantallaInicio(
 
             Text(
                 "VER REPORTES"
+            )
+        }
+
+        Button(
+            onClick =
+                irReportesRemotos,
+
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+        ) {
+
+            Text(
+                "REPORTES REMOTOS"
             )
         }
 
