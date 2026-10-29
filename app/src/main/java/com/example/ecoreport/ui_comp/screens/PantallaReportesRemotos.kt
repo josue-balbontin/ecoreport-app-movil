@@ -3,6 +3,7 @@ package com.example.ecoreport.ui_comp.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,10 +18,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.ecoreport.data.remote.ReporteDto
@@ -44,7 +48,13 @@ fun PantallaReportesRemotos(
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Lista consultada desde la API externa",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         when {
             cargando -> {
@@ -59,7 +69,10 @@ fun PantallaReportesRemotos(
                     ) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(text = "Consultando API...")
+                        Text(
+                            text = "Consultando API externa...",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
@@ -71,16 +84,35 @@ fun PantallaReportesRemotos(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(
-                            text = "Error al consultar la API: $error",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(onClick = reintentar) {
-                            Text("REINTENTAR")
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Error al conectar con la API",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Button(onClick = reintentar) {
+                                Text("REINTENTAR")
+                            }
                         }
                     }
                 }
@@ -93,14 +125,34 @@ fun PantallaReportesRemotos(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "No se encontraron reportes remotos.")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No se encontraron reportes en la API remota.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedButton(onClick = reintentar) {
+                            Text("ACTUALIZAR")
+                        }
+                    }
                 }
             }
 
             else -> {
+                Text(
+                    text = "Total reportes en la API: ${reportesRemotos.size}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(
                         items = reportesRemotos,
@@ -116,19 +168,79 @@ fun PantallaReportesRemotos(
                                     .fillMaxWidth()
                                     .padding(16.dp)
                             ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "#${reporte.id}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    val (estadoColor, estadoTexto) = when (reporte.estado.uppercase()) {
+                                        "RESUELTO" -> Pair(Color(0xFF2E7D32), "Resuelto")
+                                        "EN_PROCESO" -> Pair(Color(0xFF1565C0), "En proceso")
+                                        "PENDIENTE" -> Pair(Color(0xFFE65100), "Pendiente")
+                                        else -> Pair(MaterialTheme.colorScheme.primary, reporte.estado)
+                                    }
+
+                                    SuggestionChip(
+                                        onClick = {},
+                                        label = {
+                                            Text(
+                                                text = estadoTexto,
+                                                color = estadoColor,
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        },
+                                        colors = SuggestionChipDefaults.suggestionChipColors(
+                                            containerColor = estadoColor.copy(alpha = 0.12f)
+                                        ),
+                                        border = SuggestionChipDefaults.suggestionChipBorder(
+                                            enabled = true,
+                                            borderColor = estadoColor.copy(alpha = 0.35f)
+                                        )
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
                                 Text(
                                     text = reporte.titulo,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
 
-                                Spacer(modifier = Modifier.height(6.dp))
+                                if (reporte.descripcion.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = reporte.descripcion,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
 
-                                Text(text = "Descripción: ${reporte.descripcion}")
-                                Text(text = "Categoría: ${reporte.categoria}")
-                                Text(text = "Ubicación: ${reporte.ubicacion}")
-                                Text(text = "Estado: ${reporte.estado}")
-                                Text(text = "Fecha: ${reporte.fecha}")
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    text = "Categoría: ${reporte.categoria.ifBlank { "Sin categoría" }}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                Text(
+                                    text = "Ubicación: ${reporte.ubicacion.ifBlank { "Sin ubicación" }}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                if (reporte.fecha.isNotBlank()) {
+                                    Text(
+                                        text = "Fecha: ${reporte.fecha}",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
                             }
                         }
                     }
